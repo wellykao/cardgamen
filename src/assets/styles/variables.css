@@ -1,0 +1,74 @@
+:root {
+  /* Balatro 风格深色主题 */
+  --bg-dark: #0a0a12;
+  --bg-panel: #12121f;
+  --bg-card: #1a1a2e;
+
+  /* 霓虹色系 */
+  --neon-red: #ff3366;
+  --neon-red-glow: rgba(255, 51, 102, 0.6);
+  --neon-blue: #00d4ff;
+  --neon-blue-glow: rgba(0, 212, 255, 0.6);
+  --neon-gold: #ffd700;
+  --neon-gold-glow: rgba(255, 215, 0, 0.6);
+  --neon-green: #39ff14;
+  --neon-green-glow: rgba(57, 255, 20, 0.6);
+  --neon-purple: #b829dd;
+  --neon-purple-glow: rgba(184, 41, 221, 0.6);
+
+  /* 牌桌 */
+  --table-dark: #0d0d1a;
+  --table-main: #13132a;
+  --table-light: #1e1e3a;
+  --table-border: #2a2a4a;
+
+  /* 金色点缀 */
+  --gold: #ffd700;
+  --gold-light: #ffea70;
+  --gold-dark: #c9a000;
+
+  /* 牌面 */
+  --card-red: #ff3366;
+  --card-black: #a0a0c0;
+  --card-bg: #1e1e2e;
+
+  /* 功能色 */
+  --success: #39ff14;
+  --danger: #ff3366;
+  --warning: #ffaa00;
+  --info: #00d4ff;
+
+  /* 文字 */
+  --text-primary: #ffffff;
+  --text-secondary: #c0c0d0;
+  --text-muted: rgba(255, 255, 255, 0.5);
+
+  /* 动画时长 */
+  --anim-fast: 0.15s;
+  --anim-normal: 0.25s;
+  --anim-slow: 0.4s;
+  --anim-very-slow: 0.7s;
+
+  /* 尺寸 */
+  --table-radius: 16px;
+  --card-width: 64px;
+  --card-height: 90px;
+
+  /* 间距 */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 20px;
+  --spacing-xl: 28px;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  :root {
+    --card-width: 48px;
+    --card-height: 68px;
+    --spacing-sm: 4px;
+    --spacing-md: 8px;
+    --spacing-lg: 12px;
+  }
+}

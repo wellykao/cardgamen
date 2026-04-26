@@ -1,0 +1,11 @@
+// 核心引擎导出
+export * from './types'
+export * from './constants'
+export { createCard, createFullDeck, parseCardId } from './Card'
+export { Deck } from './Deck'
+export { findValidPairs, canCollect, canDiscardReset, isAllBlack, hasFourOfAKind } from './RuleEngine'
+export { calculateCardsScore, updatePlayerScore, updateAllScores, getScoreDiff, checkVictory, generateSettlement } from './ScoreEngine'
+export type { SettlementData } from './ScoreEngine'
+export { TurnManager } from './TurnManager'
+export { aiSelectCard, aiPlayCard, aiCollectFromFlip } from './AIPlayer'
+export { GameState } from './GameState'

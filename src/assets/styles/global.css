@@ -1,0 +1,304 @@
+@import './variables.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: var(--bg-dark);
+    color: var(--text-primary);
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  #app {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* 滚动条 */
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+  }
+}
+
+@layer components {
+  /* 牌桌背景 - Balatro 风格深色 */
+  .table-bg {
+    background: radial-gradient(ellipse at center, #16162a 0%, #0f0f1e 50%, #0a0a12 100%);
+    position: relative;
+  }
+
+  .table-bg::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Cg fill='%23ffffff' fill-opacity='0.015'%3E%3Cpath d='M50 50L60 40M50 50L40 60M50 50L60 60M50 50L40 40' stroke-width='0.5'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    pointer-events: none;
+  }
+
+  /* 牌桌边框 */
+  .wood-border {
+    border: 3px solid var(--table-border);
+    box-shadow:
+      inset 0 0 60px rgba(0, 0, 0, 0.5),
+      0 0 20px rgba(0, 212, 255, 0.1);
+  }
+
+  /* 金色按钮 - Balatro 风格 */
+  .btn-gold {
+    @apply px-6 py-3 rounded-xl font-bold text-sm cursor-pointer transition-all duration-200;
+    background: linear-gradient(180deg, #ffea70 0%, #ffd700 40%, #c9a000 100%);
+    color: #1a0a00;
+    border: 2px solid #ffd700;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+    box-shadow:
+      0 0 10px rgba(255, 215, 0, 0.3),
+      0 4px 0 #8a7000,
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+
+  .btn-gold:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 0 20px rgba(255, 215, 0, 0.5),
+      0 6px 0 #8a7000,
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+
+  .btn-gold:active {
+    transform: translateY(2px);
+    box-shadow:
+      0 0 10px rgba(255, 215, 0, 0.3),
+      0 2px 0 #8a7000,
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+
+  .btn-gold:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+    filter: grayscale(0.6);
+    box-shadow: 0 2px 0 #8a7000;
+  }
+
+  /* 暗色按钮 */
+  .btn-dark {
+    @apply px-5 py-2.5 rounded-xl font-bold text-sm cursor-pointer transition-all duration-200;
+    background: linear-gradient(180deg, #2a2a4a 0%, #1a1a2e 100%);
+    color: #c0c0d0;
+    border: 2px solid #3a3a5a;
+    box-shadow: 0 3px 0 #0a0a1e;
+  }
+
+  .btn-dark:hover {
+    background: linear-gradient(180deg, #3a3a5a 0%, #2a2a3e 100%);
+    border-color: #4a4a6a;
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.15), 0 3px 0 #0a0a1e;
+  }
+
+  /* 面板 - 深色玻璃 */
+  .glass-panel {
+    background: rgba(20, 20, 35, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  }
+
+  /* 霓虹边框面板 */
+  .neon-panel {
+    background: rgba(15, 15, 30, 0.8);
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    border-radius: 14px;
+    box-shadow:
+      0 0 15px rgba(0, 212, 255, 0.05),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
+
+  /* 选中高亮 */
+  .card-selected {
+    box-shadow:
+      0 0 20px var(--neon-gold-glow),
+      0 0 40px rgba(255, 215, 0, 0.2),
+      0 0 60px rgba(255, 215, 0, 0.1) !important;
+    border-color: var(--gold-light) !important;
+    transform: translateY(-8px) scale(1.05) !important;
+  }
+
+  /* 回合高亮脉冲 */
+  .turn-highlight {
+    animation: neonGlowPulse 1.5s ease-in-out infinite;
+  }
+
+  /* 霓虹脉冲 */
+  .neon-pulse {
+    animation: neonGlowPulse 2s ease-in-out infinite;
+  }
+
+  /* 红色霓虹脉冲 */
+  .neon-pulse-red {
+    animation: neonGlowPulseRed 1.5s ease-in-out infinite;
+  }
+
+  /* 绿色霓虹脉冲 */
+  .neon-pulse-green {
+    animation: neonGlowPulseGreen 1.5s ease-in-out infinite;
+  }
+
+  @keyframes neonGlowPulse {
+    0%, 100% {
+      box-shadow: 0 0 5px var(--neon-gold-glow), 0 0 10px rgba(255, 215, 0, 0.2);
+      border-color: rgba(255, 215, 0, 0.4);
+    }
+    50% {
+      box-shadow: 0 0 15px var(--neon-gold-glow), 0 0 30px rgba(255, 215, 0, 0.3), 0 0 45px rgba(255, 215, 0, 0.1);
+      border-color: rgba(255, 215, 0, 0.8);
+    }
+  }
+
+  @keyframes neonGlowPulseRed {
+    0%, 100% {
+      box-shadow: 0 0 5px var(--neon-red-glow);
+    }
+    50% {
+      box-shadow: 0 0 20px var(--neon-red-glow), 0 0 40px rgba(255, 51, 102, 0.3);
+    }
+  }
+
+  @keyframes neonGlowPulseGreen {
+    0%, 100% {
+      box-shadow: 0 0 5px var(--neon-green-glow);
+    }
+    50% {
+      box-shadow: 0 0 20px var(--neon-green-glow), 0 0 40px rgba(57, 255, 20, 0.3);
+    }
+  }
+
+  /* 文字发光 */
+  .text-glow-gold {
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5), 0 0 20px rgba(255, 215, 0, 0.2);
+  }
+
+  .text-glow-red {
+    text-shadow: 0 0 10px rgba(255, 51, 102, 0.5);
+  }
+
+  .text-glow-blue {
+    text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+  }
+
+  /* 日志滚动条 */
+  .log-scroll::-webkit-scrollbar {
+    width: 3px;
+  }
+  .log-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .log-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+  }
+
+  /* 隐藏滚动条 */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* 安全区域底部适配 */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* 弹入动画 */
+  .animate-pop-in {
+    animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes popIn {
+    0% {
+      opacity: 0;
+      transform: scale(0.5) translateY(20px);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  /* 分数飘字动画 */
+  .animate-float-up {
+    animation: floatUp 1.2s ease-out forwards;
+  }
+
+  @keyframes floatUp {
+    0% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-40px) scale(1.2);
+    }
+  }
+
+  /* 震动提示 */
+  .animate-shake {
+    animation: shake 0.4s ease-in-out;
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-4px); }
+    40% { transform: translateX(4px); }
+    60% { transform: translateX(-2px); }
+    80% { transform: translateX(2px); }
+  }
+
+  /* 扫描线效果 */
+  .scanline::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.03) 2px,
+      rgba(0, 0, 0, 0.03) 4px
+    );
+    pointer-events: none;
+    z-index: 1;
+  }
+}
+
+/* ====== 移动端适配 ====== */
+@media (max-width: 768px) {
+  .table-bg {
+    background: radial-gradient(ellipse at center, #141428 0%, #0a0a12 100%);
+  }
+}
