@@ -9,6 +9,7 @@ export const useSettingsStore = defineStore('settings', () => {
   const isMusicEnabled = ref(true)
   const showLogPanel = ref(true)
   const showScorePopup = ref(true)
+  const showHint = ref(true)
 
   function setSoundVolume(v: number) { soundVolume.value = Math.max(0, Math.min(1, v)) }
   function setMusicVolume(v: number) { musicVolume.value = Math.max(0, Math.min(1, v)) }
@@ -17,12 +18,13 @@ export const useSettingsStore = defineStore('settings', () => {
   function toggleMusic() { isMusicEnabled.value = !isMusicEnabled.value }
   function toggleLogPanel() { showLogPanel.value = !showLogPanel.value }
   function toggleScorePopup() { showScorePopup.value = !showScorePopup.value }
+  function toggleHint() { showHint.value = !showHint.value }
 
   return {
     soundVolume, musicVolume, animationSpeed,
     isSoundEnabled, isMusicEnabled,
-    showLogPanel, showScorePopup,
+    showLogPanel, showScorePopup, showHint,
     setSoundVolume, setMusicVolume, setAnimationSpeed,
-    toggleSound, toggleMusic, toggleLogPanel, toggleScorePopup,
+    toggleSound, toggleMusic, toggleLogPanel, toggleScorePopup, toggleHint,
   }
 })

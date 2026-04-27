@@ -7,6 +7,7 @@
         :card="position === 'bottom' ? card : undefined"
         :is-face-down="position !== 'bottom'"
         :is-selected="position === 'bottom' && selectedCardId === card.id"
+        :is-recommended="position === 'bottom' && recommendedCardId === card.id"
         :size="position === 'bottom' ? 'md' : 'sm'"
         :margin-left="index > 0 ? (position === 'bottom' ? '-18px' : '-24px') : '0'"
         :show-score="position === 'bottom'"
@@ -25,6 +26,7 @@ defineProps<{
   cards: Card[]
   position: 'bottom' | 'top' | 'left' | 'right'
   selectedCardId?: string | null
+  recommendedCardId?: string | null
 }>()
 
 defineEmits<{

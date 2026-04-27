@@ -40,9 +40,11 @@ export class GameState {
   collectChoiceContext: 'play' | 'flip' | null = null
 
   private logIdCounter = 0
+  private humanPlayerIndex = 0
+  private humanPlayerIndices: number[] = []
 
   /** 初始化游戏 */
-  initGame(playerNames: string[], avatars: string[]): void {
+  initGame(playerNames: string[], avatars: string[], startPlayerIndex: number = 0, humanIndex: number = 0, deckSeed?: string, humanIndices?: number[]): void {
     this.phase = GamePhase.Dealing
     this.logs = []
     this.tableCards = []
@@ -50,6 +52,8 @@ export class GameState {
     this.currentFlippedCard = null
     this.currentCollectPairs = []
     this.discardResetAvailable = false
+    this.humanPlayerIndex = humanIndex
+    this.humanPlayerIndices = humanIndices && humanIndices.length > 0 ? humanIndices : [humanIndex]
 
     // 初始化玩家
     this.players = playerNames.map((name, i) => ({
@@ -60,13 +64,13 @@ export class GameState {
       collected: [],
       score: 0,
       bonusScore: 0,
-      isAI: i !== 0,
+      isAI: !this.humanPlayerIndices.includes(i),
       isReady: true,
       seatIndex: i,
     }))
 
-    // 洗牌发牌
-    this.deck.init()
+    // 洗牌发牌（联机模式使用相同种子确保一致性）
+    this.deck.init(deckSeed)
     const hands = this.deck.dealHands()
     this.tableCards = this.deck.dealTableCards()
 
@@ -75,8 +79,8 @@ export class GameState {
       this.players[i].hand = hands[i].sort((a, b) => a.rank - b.rank)
     }
 
-    // 回合管理器初始化（0号玩家先出）
-    this.turnManager.init(0)
+    // 回合管理器初始化（随机起始玩家）
+    this.turnManager.init(startPlayerIndex)
     this.turnManager.setFourthPlayer(3)
 
     this.addLog(0, 'system', '游戏开始，发牌完成')
@@ -89,11 +93,11 @@ export class GameState {
 
   /** 检查弃牌重置条件 */
   private checkDiscardReset(): void {
-    const humanPlayer = this.players[0]
+    const humanPlayer = this.players[this.humanPlayerIndex]
     if (canDiscardReset(humanPlayer.hand, this.tableCards)) {
       this.discardResetAvailable = true
-      this.discardResetPlayerId = 0
-      this.addLog(0, 'system', '手牌满足弃牌重置条件，可以选择重发')
+      this.discardResetPlayerId = this.humanPlayerIndex
+      this.addLog(this.humanPlayerIndex, 'system', '手牌满足弃牌重置条件，可以选择重发')
     } else {
       this.discardResetAvailable = false
       this.phase = GamePhase.Playing
@@ -131,15 +135,29 @@ export class GameState {
   /** 人类玩家出牌 */
   playHumanCard(cardId: string): { success: boolean; pairs: CollectPair[]; needsChoice: boolean } {
     if (this.phase !== GamePhase.Playing) return { success: false, pairs: [], needsChoice: false }
-    if (this.turnManager.currentPlayer !== 0) return { success: false, pairs: [], needsChoice: false }
+    if (this.turnManager.currentPlayer !== this.humanPlayerIndex) return { success: false, pairs: [], needsChoice: false }
 
-    const player = this.players[0]
+    const player = this.players[this.humanPlayerIndex]
     const cardIndex = player.hand.findIndex(c => c.id === cardId)
     if (cardIndex === -1) return { success: false, pairs: [], needsChoice: false }
 
     // 从手牌移除
     const card = player.hand.splice(cardIndex, 1)[0]
-    return this.executePlayCard(0, card)
+    return this.executePlayCard(this.humanPlayerIndex, card)
+  }
+
+  /** 联机模式：执行远端玩家的出牌 */
+  playRemoteCard(playerId: number, cardId: string): { success: boolean; pairs: CollectPair[]; needsChoice: boolean } {
+    if (this.phase !== GamePhase.Playing) return { success: false, pairs: [], needsChoice: false }
+    if (this.turnManager.currentPlayer !== playerId) return { success: false, pairs: [], needsChoice: false }
+
+    const player = this.players[playerId]
+    const cardIndex = player.hand.findIndex(c => c.id === cardId)
+    if (cardIndex === -1) return { success: false, pairs: [], needsChoice: false }
+
+    // 从手牌移除
+    const card = player.hand.splice(cardIndex, 1)[0]
+    return this.executePlayCard(playerId, card)
   }
 
   /** AI玩家出牌 */
@@ -201,12 +219,14 @@ export class GameState {
     return { success: true, pairs, needsChoice: true }
   }
 
-  /** 翻牌 */
-  flipCard(): { card: Card | null; pairs: CollectPair[]; needsChoice: boolean } {
+  /** 翻牌（skipFinishTurn 用于联机模式，避免提前切换回合） */
+  flipCard(skipFinishTurn: boolean = false): { card: Card | null; pairs: CollectPair[]; needsChoice: boolean; deckEmpty: boolean } {
     if (!this.deck.hasCards) {
-      // 无牌可翻，回合结束
-      this.finishTurn()
-      return { card: null, pairs: [], needsChoice: false }
+      // 无牌可翻，回合结束（单机模式直接结束，联机模式由外部统一控制）
+      if (!skipFinishTurn) {
+        this.finishTurn()
+      }
+      return { card: null, pairs: [], needsChoice: false, deckEmpty: true }
     }
 
     const playerId = this.turnManager.currentPlayer
@@ -229,7 +249,7 @@ export class GameState {
       this.addLog(playerId, 'collectCard', `${card.display} 无可收牌`)
       this.turnManager.setFlippedCard(card)
       this.turnManager.setCollectFromFlip([])
-      return { card, pairs: [], needsChoice: false }
+      return { card, pairs: [], needsChoice: false, deckEmpty: false }
     }
 
     if (pairs.length === 1) {
@@ -237,7 +257,7 @@ export class GameState {
       this.executeCollect(playerId, [pairs[0]])
       this.turnManager.setFlippedCard(card)
       this.turnManager.setCollectFromFlip([pairs[0]])
-      return { card, pairs: [pairs[0]], needsChoice: false }
+      return { card, pairs: [pairs[0]], needsChoice: false, deckEmpty: false }
     }
 
     // 多张可收，等待选择
@@ -247,7 +267,7 @@ export class GameState {
     this.addLog(playerId, 'collectCard', `${card.display} 有多张可收，请选择一张`)
     this.turnManager.setFlippedCard(card)
     this.turnManager.setCollectFromFlip([])
-    return { card, pairs, needsChoice: true }
+    return { card, pairs, needsChoice: true, deckEmpty: false }
   }
 
   /** 执行收牌 */
@@ -406,7 +426,7 @@ export class GameState {
 
   /** 获取人类玩家 */
   get humanPlayer(): Player {
-    return this.players[0]
+    return this.players[this.humanPlayerIndex]
   }
 
   /** 获取当前出牌玩家 */

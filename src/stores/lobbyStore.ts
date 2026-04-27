@@ -143,6 +143,15 @@ export const useLobbyStore = defineStore('lobby', () => {
     isMatching.value = false
   }
 
+  // 退出登录
+  function logout() {
+    playerName.value = ''
+    playerAvatar.value = ''
+    isPlayerLoggedIn.value = false
+    currentRoom.value = null
+    rooms.value = []
+  }
+
   // 获取游戏玩家名字列表
   function getGamePlayerNames(): string[] {
     if (!currentRoom.value) return [playerName.value, ...aiNames.slice(0, 3)]
@@ -163,6 +172,7 @@ export const useLobbyStore = defineStore('lobby', () => {
     currentRoom,
     avatarList,
     login,
+    logout,
     createRoom,
     quickMatch,
     cancelMatch,

@@ -1,38 +1,30 @@
 <template>
   <div class="game-table table-bg w-full h-full relative overflow-hidden select-none">
-    <!-- ====== 顶部栏：上方3个AI玩家座位 ====== -->
+    <!-- ====== 顶部栏：上方3个其他玩家座位 ====== -->
     <div class="absolute top-3 left-0 right-0 md:right-56 flex justify-around items-start px-4 z-10 gap-2">
       <PlayerSeat
-        :player="players[1]"
-        :is-active="currentPlayerIndex === 1"
-        :is-collecting="collectingPlayerId === players[1].id"
-      />
-      <PlayerSeat
-        :player="players[2]"
-        :is-active="currentPlayerIndex === 2"
-        :is-collecting="collectingPlayerId === players[2].id"
-      />
-      <PlayerSeat
-        :player="players[3]"
-        :is-active="currentPlayerIndex === 3"
-        :is-collecting="collectingPlayerId === players[3].id"
+        v-for="idx in otherPlayerIndices"
+        :key="idx"
+        :player="players[idx]"
+        :is-active="currentPlayerIndex === idx"
+        :is-collecting="collectingPlayerId === players[idx]?.id"
       />
     </div>
 
     <!-- ====== AI手牌区（上方3个玩家的牌背） ====== -->
     <div class="absolute top-24 left-0 right-0 md:right-56 flex justify-around px-6 z-[5]">
-      <div v-for="aiIdx in [1, 2, 3]" :key="aiIdx" class="flex justify-center items-end">
+      <div v-for="idx in otherPlayerIndices" :key="idx" class="flex justify-center items-end">
         <div class="flex">
           <CardItem
-            v-for="i in Math.min(players[aiIdx].hand.length, 6)"
-            :key="'ai-' + aiIdx + '-' + i"
+            v-for="i in Math.min(players[idx]?.hand?.length || 0, 6)"
+            :key="'ai-' + idx + '-' + i"
             is-face-down
             size="sm"
             :margin-left="i > 1 ? '-20px' : '0'"
           />
         </div>
-        <div v-if="players[aiIdx].hand.length > 6" class="text-[#00d4ff]/40 text-[10px] ml-1 self-end mb-1 font-bold">
-          +{{ players[aiIdx].hand.length - 6 }}
+        <div v-if="(players[idx]?.hand?.length || 0) > 6" class="text-[#00d4ff]/40 text-[10px] ml-1 self-end mb-1 font-bold">
+          +{{ (players[idx]?.hand?.length || 0) - 6 }}
         </div>
       </div>
     </div>
@@ -74,12 +66,12 @@
       <!-- 自己座位 + 倒计时 -->
       <div class="flex items-center justify-center gap-3 mb-1.5">
         <PlayerSeat
-          :player="players[0]"
-          :is-active="currentPlayerIndex === 0"
-          :is-collecting="collectingPlayerId === players[0].id"
+          :player="players[myPlayerIndex]"
+          :is-active="currentPlayerIndex === myPlayerIndex"
+          :is-collecting="collectingPlayerId === players[myPlayerIndex]?.id"
         />
         <TurnTimer
-          v-if="currentPlayerIndex === 0 && phase === 'playing'"
+          v-if="currentPlayerIndex === myPlayerIndex && phase === 'playing'"
           :time-left="turnTimerValue"
           :max-time="30"
         />
@@ -88,9 +80,10 @@
       <!-- 手牌 -->
       <div class="flex justify-center px-3 mb-1 overflow-x-auto pb-1 scrollbar-hide">
         <PlayerHand
-          :cards="players[0].hand"
+          :cards="players[myPlayerIndex]?.hand || []"
           position="bottom"
           :selected-card-id="selectedCardId"
+          :recommended-card-id="recommendedCardId"
           @select-card="$emit('selectCard', $event)"
           @play-card="$emit('playCard', $event)"
         />
@@ -98,7 +91,7 @@
 
       <!-- 操作面板 -->
       <ActionPanel
-        :is-my-turn="currentPlayerIndex === 0"
+        :is-my-turn="currentPlayerIndex === myPlayerIndex"
         :is-animating="isAnimating"
         :selected-card-id="selectedCardId"
         :show-discard-reset="showDiscardReset"
@@ -115,7 +108,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { Player, Card, LogEntry, GamePhase } from '@/engine'
 import PlayerSeat from './PlayerSeat.vue'
 import PlayerHand from './PlayerHand.vue'
@@ -127,7 +120,7 @@ import ActionPanel from './ActionPanel.vue'
 import ScorePopup from './ScorePopup.vue'
 import BaseModal from '@/components/common/BaseModal.vue'
 
-defineProps<{
+const props = defineProps<{
   players: Player[]
   tableCards: Card[]
   logs: LogEntry[]
@@ -142,6 +135,9 @@ defineProps<{
   clickableCardIds?: string[]
   awaitingCollectChoice?: boolean
   collectingPlayerId?: number
+  recommendedCardId?: string | null
+  isMultiplayer?: boolean
+  myPlayerIndex?: number
 }>()
 
 defineEmits<{
@@ -151,6 +147,13 @@ defineEmits<{
   declineDiscard: []
   selectTableCard: [cardId: string]
 }>()
+
+const myPlayerIndex = computed(() => props.myPlayerIndex ?? 0)
+
+const otherPlayerIndices = computed(() => {
+  const all = [0, 1, 2, 3]
+  return all.filter(i => i !== myPlayerIndex.value)
+})
 
 const logCollapsed = ref(false)
 const showMobileLog = ref(false)

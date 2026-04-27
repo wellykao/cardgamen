@@ -157,9 +157,6 @@ const conditionText = computed(() => {
 })
 
 function handlePlayAgain() {
-  const names = lobbyStore.getGamePlayerNames()
-  const avatars = lobbyStore.getGamePlayerAvatars()
-  gameStore.initGame(names, avatars)
   router.push('/game')
 }
 

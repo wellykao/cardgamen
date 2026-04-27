@@ -3,6 +3,13 @@
     <!-- 顶部导航 -->
     <header class="flex items-center justify-between px-6 py-4 border-b border-white/10 z-10">
       <div class="flex items-center gap-3">
+        <button
+          class="text-white/30 hover:text-[#ff3366] cursor-pointer transition-colors p-1.5 rounded-lg hover:bg-white/5"
+          title="退出登录"
+          @click="handleLogout"
+        >
+          <span class="text-sm font-bold">←</span>
+        </button>
         <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-[#ffd700] to-[#c9a000] flex items-center justify-center text-[#1a0a00] font-black text-lg shadow-[0_0_15px_rgba(255,215,0,0.3)]">
           🃏
         </div>
@@ -58,15 +65,28 @@
           </button>
         </div>
 
-        <div class="flex items-center gap-3 w-full justify-center">
-          <!-- 创建房间 -->
-          <BaseButton variant="dark" size="md" @click="showCreateRoom = true">
-            🏠 创建房间
-          </BaseButton>
-          <!-- 规则说明 -->
-          <BaseButton variant="dark" size="md" @click="showRules = true">
-            📖 游戏规则
-          </BaseButton>
+        <div class="flex flex-col items-center gap-2 w-full">
+          <div class="flex items-center gap-3 w-full justify-center">
+            <!-- 创建房间 -->
+            <BaseButton variant="dark" size="md" @click="showCreateRoom = true">
+              🏠 创建房间
+            </BaseButton>
+            <!-- 加入房间 -->
+            <BaseButton variant="dark" size="md" @click="showJoinRoom = true">
+              🔑 加入房间
+            </BaseButton>
+          </div>
+          <div class="flex items-center gap-3 w-full justify-center">
+            <!-- 快速规则 -->
+            <BaseButton variant="dark" size="md" @click="showRules = true">
+              📖 快速规则
+            </BaseButton>
+            <!-- 教学模式 -->
+            <BaseButton variant="dark" size="md" @click="showTutorialMode = true">
+              🎓 教学模式
+            </BaseButton>
+          </div>
+          <!-- 教学模式已在上方按钮中 -->
         </div>
       </div>
 
@@ -116,8 +136,39 @@
         />
         <div class="flex justify-end gap-3">
           <BaseButton variant="dark" @click="showCreateRoom = false">取消</BaseButton>
-          <BaseButton variant="gold" :disabled="!newRoomName.trim()" @click="handleCreateRoom">创建</BaseButton>
+          <BaseButton variant="gold" :disabled="!newRoomName.trim() || isCreatingRoom" @click="handleCreateRoom">
+            {{ isCreatingRoom ? '创建中...' : '创建' }}
+          </BaseButton>
         </div>
+        <div v-if="createdRoomCode" class="mt-4 p-3 bg-[#ffd700]/10 border border-[#ffd700]/30 rounded-lg text-center">
+          <p class="text-white/60 text-xs mb-1">房间创建成功！请记下房间号：</p>
+          <p class="text-[#ffd700] text-2xl font-black tracking-widest">{{ createdRoomCode }}</p>
+          <p class="text-white/40 text-xs mt-1">分享给好友，输入此房间号即可加入</p>
+        </div>
+      </div>
+    </BaseModal>
+
+    <!-- 加入房间弹窗 -->
+    <BaseModal v-model="showJoinRoom" title="加入房间">
+      <div class="py-4">
+        <label class="text-white/60 text-sm mb-2 block">房间号</label>
+        <input
+          v-model="joinRoomCode"
+          type="text"
+          placeholder="请输入6位房间号"
+          maxlength="6"
+          inputmode="numeric"
+          class="w-full bg-black/30 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/30 outline-none focus:border-gold/50 transition-colors mb-6 text-center text-lg tracking-widest"
+          @keyup.enter="handleJoinRoomByCode"
+          @input="joinRoomCode = joinRoomCode.replace(/\D/g, '')"
+        />
+        <div class="flex justify-end gap-3">
+          <BaseButton variant="dark" @click="showJoinRoom = false">取消</BaseButton>
+          <BaseButton variant="gold" :disabled="joinRoomCode.length !== 6 || isJoiningRoom" @click="handleJoinRoomByCode">
+            {{ isJoiningRoom ? '加入中...' : '加入' }}
+          </BaseButton>
+        </div>
+        <p v-if="joinError" class="text-[#ff3366] text-sm mt-3 text-center">{{ joinError }}</p>
       </div>
     </BaseModal>
 
@@ -162,6 +213,9 @@
         </div>
       </div>
     </BaseModal>
+
+    <!-- 教学模式 -->
+    <TutorialMode v-model="showTutorialMode" />
   </div>
 </template>
 
@@ -171,19 +225,29 @@ import { useRouter } from 'vue-router'
 import { Settings } from 'lucide-vue-next'
 import { useLobbyStore } from '@/stores/lobbyStore'
 import { useSettingsStore } from '@/stores/settingsStore'
+import { useMultiplayerStore } from '@/stores/multiplayerStore'
 import BaseButton from '@/components/common/BaseButton.vue'
 import BaseModal from '@/components/common/BaseModal.vue'
 import BaseAvatar from '@/components/common/BaseAvatar.vue'
+import TutorialMode from '@/components/game/TutorialMode.vue'
 
 const router = useRouter()
 const lobbyStore = useLobbyStore()
 const settingsStore = useSettingsStore()
+const mpStore = useMultiplayerStore()
 
 const showCreateRoom = ref(false)
+const showJoinRoom = ref(false)
 const showRules = ref(false)
 const showSettings = ref(false)
+const showTutorialMode = ref(false)
 const newRoomName = ref('')
+const joinRoomCode = ref('')
 const animSpeed = ref(settingsStore.animationSpeed)
+const isCreatingRoom = ref(false)
+const isJoiningRoom = ref(false)
+const joinError = ref('')
+const createdRoomCode = ref('')
 
 watch(animSpeed, (v) => settingsStore.setAnimationSpeed(v))
 
@@ -191,7 +255,6 @@ async function handleQuickMatch() {
   try {
     const room = await lobbyStore.quickMatch()
     if (room.players.length >= 4 || room.status === 'playing') {
-      // 4人齐了直接开游戏
       router.push('/game')
     } else {
       router.push(`/room/${room.id}`)
@@ -206,11 +269,46 @@ function handleCancelMatch() {
   lobbyStore.cancelMatch()
 }
 
-function handleCreateRoom() {
-  if (!newRoomName.value.trim()) return
-  const room = lobbyStore.createRoom(newRoomName.value.trim())
-  showCreateRoom.value = false
-  router.push(`/room/${room.id}`)
+async function handleCreateRoom() {
+  if (!newRoomName.value.trim() || isCreatingRoom.value) return
+  isCreatingRoom.value = true
+  createdRoomCode.value = ''
+  try {
+    const room = await mpStore.createRoom(
+      newRoomName.value.trim(),
+      lobbyStore.playerName,
+      lobbyStore.playerAvatar
+    )
+    createdRoomCode.value = room.room_code
+    setTimeout(() => {
+      showCreateRoom.value = false
+      createdRoomCode.value = ''
+      router.push(`/room/${room.id}`)
+    }, 3000)
+  } catch (error: any) {
+    alert('创建房间失败: ' + (error.message || '未知错误'))
+  } finally {
+    isCreatingRoom.value = false
+  }
+}
+
+async function handleJoinRoomByCode() {
+  if (joinRoomCode.value.length !== 6 || isJoiningRoom.value) return
+  isJoiningRoom.value = true
+  joinError.value = ''
+  try {
+    const room = await mpStore.joinRoomByCode(
+      joinRoomCode.value,
+      lobbyStore.playerName,
+      lobbyStore.playerAvatar
+    )
+    showJoinRoom.value = false
+    router.push(`/room/${room.id}`)
+  } catch (error: any) {
+    joinError.value = error.message || '加入房间失败'
+  } finally {
+    isJoiningRoom.value = false
+  }
 }
 
 function handleJoinRoom(roomId: string) {
@@ -218,5 +316,10 @@ function handleJoinRoom(roomId: string) {
   if (!room || room.status === 'playing') return
   lobbyStore.currentRoom = room
   router.push(`/room/${roomId}`)
+}
+
+function handleLogout() {
+  lobbyStore.logout?.()
+  router.push('/')
 }
 </script>

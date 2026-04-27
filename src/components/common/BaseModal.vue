@@ -32,11 +32,13 @@
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   modelValue: boolean
   title?: string
   closeable?: boolean
-}>()
+}>(), {
+  closeable: true,
+})
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]

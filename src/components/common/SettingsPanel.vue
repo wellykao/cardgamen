@@ -83,6 +83,23 @@
         {{ settingsStore.showScorePopup ? '显示' : '隐藏' }}
       </button>
     </div>
+
+    <!-- 推荐出牌 -->
+    <div class="flex items-center justify-between">
+      <div>
+        <div class="text-white/80 text-sm">推荐出牌</div>
+        <div class="text-white/40 text-xs">高亮显示建议出的牌</div>
+      </div>
+      <button
+        class="px-4 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-all"
+        :class="settingsStore.showHint
+          ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+          : 'bg-red-500/20 text-red-400 border border-red-500/30'"
+        @click="settingsStore.toggleHint()"
+      >
+        {{ settingsStore.showHint ? '开启' : '关闭' }}
+      </button>
+    </div>
   </div>
 </template>
 

@@ -50,6 +50,14 @@
         draggable="false"
       />
 
+      <!-- 推荐标记 -->
+      <div v-if="isRecommended && !isFaceDown"
+        class="absolute -top-1.5 -right-1.5 z-30 w-5 h-5 rounded-full flex items-center justify-center"
+        style="background: linear-gradient(135deg, #ffd700, #ffaa00); box-shadow: 0 0 8px rgba(255,215,0,0.6);"
+      >
+        <span class="text-[10px] font-black text-black">👍</span>
+      </div>
+
       <!-- 分值叠加 -->
       <div v-if="showScore && card && card.scoreValue > 0"
         class="absolute bottom-[5px] left-1/2 -translate-x-1/2 text-[7px] md:text-[8px] font-bold px-1.5 py-[2px] rounded z-20 whitespace-nowrap"
@@ -70,6 +78,7 @@ const props = defineProps<{
   card?: Card
   isFaceDown?: boolean
   isSelected?: boolean
+  isRecommended?: boolean
   size?: 'sm' | 'md' | 'lg'
   marginLeft?: string
   showScore?: boolean
@@ -117,6 +126,9 @@ const cardBackGlowClass = computed(() => {
 const cardFaceGlowClass = computed(() => {
   if (props.isSelected) {
     return 'ring-2 ring-[#ffd700] shadow-[0_0_20px_rgba(255,215,0,0.5)]'
+  }
+  if (props.isRecommended) {
+    return 'ring-2 ring-[#39ff14] shadow-[0_0_15px_rgba(57,255,20,0.4)]'
   }
   return ''
 })
