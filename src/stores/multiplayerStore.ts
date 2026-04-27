@@ -417,7 +417,18 @@ export const useMultiplayerStore = defineStore('multiplayer', () => {
     await supabase.from('game_snapshots').insert({
       room_id: currentRoom.value.id,
       player_index: gameState.turnManager.currentPlayer,
-      game_state_json: JSON.stringify(gameState.serialize()),
+      game_state_json: JSON.stringify({
+        phase: gameState.phase,
+        currentPlayer: gameState.turnManager.currentPlayer,
+        players: gameState.players.map(p => ({
+          id: p.id,
+          handCount: p.hand.length,
+          collectedCount: p.collected.length,
+          score: p.score,
+        })),
+        tableCardsCount: gameState.tableCards.length,
+        deckRemaining: gameState.deck.remaining,
+      }),
     })
   }
 

@@ -199,7 +199,7 @@ export const useGameStore = defineStore('game', () => {
     await delay(DELAY_TURN_CHANGE)
 
     // 检查游戏是否结束
-    if (gameState.value.phase === GamePhase.Settlement) {
+    if ((gameState.value.phase as GamePhase) === GamePhase.Settlement) {
       isAnimating.value = false
       return
     }
@@ -211,7 +211,7 @@ export const useGameStore = defineStore('game', () => {
 
   /** 仅执行回合切换（用于联机模式收到 play 消息后统一推进回合） */
   async function remoteFinishTurn() {
-    if (gameState.value.phase !== GamePhase.Playing) return
+    if ((gameState.value.phase as GamePhase) !== GamePhase.Playing) return
     // 防止重复调用
     if (isAnimating.value) return
 
@@ -220,7 +220,7 @@ export const useGameStore = defineStore('game', () => {
     gameState.value.finishTurn()
     await delay(DELAY_TURN_CHANGE)
 
-    if (gameState.value.phase === GamePhase.Settlement) {
+    if ((gameState.value.phase as GamePhase) === GamePhase.Settlement) {
       isAnimating.value = false
       return
     }
@@ -296,7 +296,7 @@ export const useGameStore = defineStore('game', () => {
       if (currentPlayer.hand.length === 0) {
         gameState.value.finishTurn()
         await delay(DELAY_TURN_CHANGE)
-        if (gameState.value.phase === GamePhase.Settlement) break
+        if ((gameState.value.phase as GamePhase) === GamePhase.Settlement) break
         continue
       }
 
@@ -350,7 +350,7 @@ export const useGameStore = defineStore('game', () => {
       gameState.value.finishTurn()
       await delay(DELAY_TURN_CHANGE)
 
-      if (gameState.value.phase === GamePhase.Settlement) break
+      if ((gameState.value.phase as GamePhase) === GamePhase.Settlement) break
     }
 
     isAnimating.value = false
